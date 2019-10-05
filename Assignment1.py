@@ -3,9 +3,9 @@
 
 letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 digits = '1234567890'
-seperators = '[]();:'
-operators = '=-+*/%'
-keywords = ['for', 'if', 'while', 'fi', 'return', 'True', 'False']
+seperators = '[]();:{}'
+operators = '=-+*/%<>'
+keywords = ['for', 'if', 'while', 'fi', 'return', 'True', 'False', 'int', 'str']
 
 def getType(char):
     if char in letters:
@@ -25,22 +25,25 @@ def lexer(S):
     result = []
     for char in S:
         if char in seperators or char is ' ':
-            if char in seperators:
-                result.append(('Seperator', char))
-            if char in operators:
-                result.append(('Operator', char))
             if len(current_word) > 0:
+                print(current_word)
                 lexeme = current_word
                 token = ''
-                if getType(current_word[0]) is 'L':
+                if current_word in keywords:
+                    token = 'Keyword'
+                elif getType(current_word[0]) is 'L':
                     token = step_State1(current_word)
                 elif getType(current_word[0]) is 'D':
                     token = step_State2(current_word)
+                elif getType(current_word[0]) is 'O':
+                    token = step_State4(current_word)
                 else:
                     token = 'Invalid Token'
-                #TODO: keyword check
+
                 result.append((token, lexeme))
                 current_word = ''
+            if char in seperators:
+                result.append(('Seperator', char))
         else:
             current_word = current_word + char
     return result
@@ -78,6 +81,19 @@ def step_State3(lexeme):
     else:
         return 'Invalid Token'
 
-#TODO: state for operators to check for +=, ==, -= etc
-s = "def sample_function(input): if x == 10.5: return True "
-print(lexer(s))
+
+def step_State4(lexeme):
+    input = lexeme[0]
+    print(lexeme)
+    if len(lexeme) == 1:
+        return 'Operator'
+    elif len(lexeme) == 2 and lexeme[1] == '=':
+        return 'Operator'
+    else:
+        return 'Invalid Token'
+
+if __name__ == '__main__':
+    s = ""
+    with open('example.txt', 'r') as file:
+        s = file.read().replace('\n', '')
+    print(lexer(s))
