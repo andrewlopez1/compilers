@@ -1,0 +1,3 @@
+def sample_function(input):
+	if x == 10.5:
+		return True
