@@ -95,5 +95,5 @@ def step_State4(lexeme):
 if __name__ == '__main__':
     s = ""
     with open('example.txt', 'r') as file:
-        s = file.read().replace('\n', '')
+        s = file.read().replace('\n', '').replace('\t', '')
     print(lexer(s))
