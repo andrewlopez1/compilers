@@ -1,10 +1,10 @@
-#Input: string containing any number of lexemes seperated by whitespace or seperators
+#Input: string containing any number of lexemes seperated by whitespace or separators
 #Output: list of (token, lexeme) pairs for Identifier, Integer, Real, Keyword, Operator and Seperator tokens
 import os
 
 letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 digits = '1234567890'
-seperators = '[]();:{}'
+separators = '[]();:{}'
 operators = '=-+*/%<>'
 keywords = ['for', 'if', 'while', 'fi', 'return', 'True', 'False', 'int', 'str', '%%']
 
@@ -13,7 +13,7 @@ def getType(char):
         return 'L'
     elif char in digits:
         return 'D'
-    elif char in seperators:
+    elif char in separators:
         return 'S'
     elif char in operators:
         return 'O'
@@ -25,7 +25,7 @@ def lexer(S):
     current_word = ''
     result = []
     for char in S:
-        if char in seperators or char is ' ':
+        if char in separators or char is ' ':
             if len(current_word) > 0:
                 print(current_word)
                 lexeme = current_word
@@ -43,7 +43,7 @@ def lexer(S):
 
                 result.append((token, lexeme))
                 current_word = ''
-            if char in seperators:
+            if char in separators:
                 result.append(('Seperator', char))
         else:
             current_word = current_word + char
