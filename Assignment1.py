@@ -1,11 +1,12 @@
 #Input: string containing any number of lexemes seperated by whitespace or seperators
 #Output: list of (token, lexeme) pairs for Identifier, Integer, Real, Keyword, Operator and Seperator tokens
+import os
 
 letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 digits = '1234567890'
 seperators = '[]();:{}'
 operators = '=-+*/%<>'
-keywords = ['for', 'if', 'while', 'fi', 'return', 'True', 'False', 'int', 'str']
+keywords = ['for', 'if', 'while', 'fi', 'return', 'True', 'False', 'int', 'str', '%%']
 
 def getType(char):
     if char in letters:
@@ -94,6 +95,13 @@ def step_State4(lexeme):
 
 if __name__ == '__main__':
     s = ""
-    with open('example.txt', 'r') as file:
-        s = file.read().replace('\n', '').replace('\t', '')
-    print(lexer(s))
+    f = open("output.txt", "w+")
+    for path in os.listdir("./"):
+        if path.endswith(".txt") and path != "output.txt":
+            print("parsing %s" % path)
+            f.write("\n OUTPUT FOR %s\n" % path)
+            with open(path, 'r') as file:
+                s = file.read().replace('\n', '').replace('\t', '')
+                result = lexer(s)
+                for elem in result:
+                    f.write("%s %s \n" % elem)
