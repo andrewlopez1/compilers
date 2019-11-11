@@ -1,5 +1,6 @@
 import os
 from Assignment1 import lexer
+import argparse
 
 class SyntaxAnalyzer:
     def __init__(self):
@@ -513,18 +514,21 @@ class SyntaxAnalyzer:
         #print (self.token, self.lexeme)
 
 if __name__ == '__main__':
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("path")
+    args = argparser.parse_args()
     SA = SyntaxAnalyzer()
     s = ""
     SA.f = open("output.txt", "w+")
-    for path in os.listdir("./"):
-        if path.endswith(".txt") and path != "output.txt":
-            print("parsing %s" % path)
-            SA.f.write("\n OUTPUT FOR %s\n" % path)
-            with open(path, 'r') as file:
-                s = file.read().replace('\n', ' ').replace('\t', ' ')
-                SA.corpus = lexer(s)
-                #for elem in SA.corpus:
-                #    SA.f.write("%s %s \n" % elem)
+    path = args.path
+    if path.endswith(".txt") and path != "output.txt":
+        print("parsing %s" % path)
+        SA.f.write("\n OUTPUT FOR %s\n" % path)
+        with open(path, 'r') as file:
+            s = file.read().replace('\n', ' ').replace('\t', ' ')
+            SA.corpus = lexer(s)
+            #for elem in SA.corpus:
+            #    SA.f.write("%s %s \n" % elem)
     SA.token, SA.lexeme = SA.corpus[0]
     SA.f.write("Token: %s \t Lexeme: %s \n" % (SA.token, SA.lexeme))
     SA.Rat19F()
