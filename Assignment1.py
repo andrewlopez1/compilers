@@ -56,7 +56,7 @@ def lexer(S):
                 if char == '[' and S[index+1] == '*':
                     commented = True
                     continue
-                result.append(('Seperator', char))
+                result.append(('Separator', char))
             if char in operators:
                 current_word = current_word + char
                 if current_word in combination_operators:
