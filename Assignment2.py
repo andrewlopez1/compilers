@@ -97,17 +97,19 @@ class SyntaxAnalyzer:
             return False
 
     def Parameter(self):
-        self.f.write("<Parameter> ::= <IDs> <Qualifier>\n")
-        self.productions.append("<Parameter> ::= <IDs> <Qualifier>")
+
         if self.IDs():
             if self.Qualifier():
+                self.f.write("<Parameter> ::= <IDs> <Qualifier>\n")
+                self.productions.append("<Parameter> ::= <IDs> <Qualifier>")
                 return True
         return False
 
     def Qualifier(self):
-        self.f.write("<Qualifier> ::= int | boolean | real\n")
-        self.productions.append("<Qualifier> ::= int | boolean | real")
+
         if self.lexeme in ('int', 'boolean', 'real'):
+            self.f.write("<Qualifier> ::= int | boolean | real\n")
+            self.productions.append("<Qualifier> ::= int | boolean | real")
             self.lexer_next()
             return True
         else:
@@ -137,10 +139,11 @@ class SyntaxAnalyzer:
             self.Empty()
 
     def DeclarationList(self):
-        self.f.write("<Declaration List> ::= <Declaration> ; | <Declaration> ; <Declaration List>\n")
-        self.productions.append("<Declaration List> ::= <Declaration> ; | <Declaration> ; <Declaration List>")
+
         if self.Declaration():
             if self.lexeme == ';':
+                self.f.write("<Declaration List> ::= <Declaration> ; | <Declaration> ; <Declaration List>\n")
+                self.productions.append("<Declaration List> ::= <Declaration> ; | <Declaration> ; <Declaration List>")
                 self.lexer_next()
                 if not self.DeclarationList():
                     self.Empty()
@@ -154,16 +157,16 @@ class SyntaxAnalyzer:
             return False
 
     def Declaration(self):
-        self.f.write("<Declaration> ::= <Qualifier> <IDs>\n")
-        self.productions.append("<Declaration> ::= <Qualifier> <IDs>")
+
         if self.Qualifier():
             if self.IDs():
+                self.f.write("<Declaration> ::= <Qualifier> <IDs>\n")
+                self.productions.append("<Declaration> ::= <Qualifier> <IDs>")
                 return True
         return False
 
     def IDs(self):
-        self.f.write("<IDs> ::= <Identifier> | <Identifier> , <IDs>\n")
-        self.productions.append("<IDs> ::= <Identifier> | <Identifier> , <IDs>")
+
         if self.token == "Identifier":
             self.lexer_next()
             if self.lexeme == ',':
@@ -172,17 +175,22 @@ class SyntaxAnalyzer:
                     print("ERROR expected Identifier")
                     return False
                 else:
+                    self.f.write("<IDs> ::= <Identifier> | <Identifier> , <IDs>\n")
+                    self.productions.append("<IDs> ::= <Identifier> | <Identifier> , <IDs>")
                     return True
             else:
+                self.f.write("<IDs> ::= <Identifier> | <Identifier> , <IDs>\n")
+                self.productions.append("<IDs> ::= <Identifier> | <Identifier> , <IDs>")
                 self.Empty()
                 return True
         else:
             return False
 
     def StatementList(self):
-        self.f.write("<Statement List> ::= <Statement> | <Statement> <StatementList>\n")
-        self.productions.append("<Statement List> ::= <Statement> | <Statement> <StatementList>")
+
         if self.Statement():
+            self.f.write("<Statement List> ::= <Statement> | <Statement> <StatementList>\n")
+            self.productions.append("<Statement List> ::= <Statement> | <Statement> <StatementList>")
             if not self.StatementList():
                 self.Empty()
                 return True
@@ -192,21 +200,23 @@ class SyntaxAnalyzer:
             return False
 
     def Statement(self):
-        self.f.write("<Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>\n")
-        self.productions.append("<Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>")
+
         if self.Compound() or self.Assign() or self.If() or self.Return() or self.Print() or self.Scan() or self.While():
+            self.f.write("<Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>\n")
+            self.productions.append("<Statement> ::= <Compound> | <Assign> | <If> | <Return> | <Print> | <Scan> | <While>")
             return True
         else:
             return False
 
     def Compound(self):
-        self.f.write("<Compound> := { <Statement List> }\n")
-        self.productions.append("<Compound> := { <Statement List> }")
+
         if self.lexeme == '{':
             self.lexer_next()
             if self.StatementList():
                 if self.lexeme == '}':
                     self.lexer_next()
+                    self.f.write("<Compound> := { <Statement List> }\n")
+                    self.productions.append("<Compound> := { <Statement List> }")
                     return True
                 else:
                     print("ERROR '}' expected")
@@ -240,8 +250,7 @@ class SyntaxAnalyzer:
             return False
 
     def If(self):
-        self.f.write("<If> ::= if ( <Condition> ) <Statement> fi | if ( <Condition> ) <Statement> otherwise <Statement> fi\n")
-        self.productions.append("<If> ::= if ( <Condition> ) <Statement> fi | if ( <Condition> ) <Statement> otherwise <Statement> fi")
+
         if self.lexeme == "if":
             self.lexer_next()
             if self.lexeme == "(":
@@ -255,6 +264,8 @@ class SyntaxAnalyzer:
                                 if self.Statement():
                                     if self.lexeme == "fi":
                                         self.lexer_next()
+                                        self.f.write("<If> ::= if ( <Condition> ) <Statement> fi | if ( <Condition> ) <Statement> otherwise <Statement> fi\n")
+                                        self.productions.append("<If> ::= if ( <Condition> ) <Statement> fi | if ( <Condition> ) <Statement> otherwise <Statement> fi")
                                         return True
                                     else:
                                         print("ERROR expected fi at end of if")
@@ -265,6 +276,8 @@ class SyntaxAnalyzer:
                             else:
                                 if self.lexeme == "fi":
                                     self.lexer_next()
+                                    self.f.write("<If> ::= if ( <Condition> ) <Statement> fi | if ( <Condition> ) <Statement> otherwise <Statement> fi\n")
+                                    self.productions.append("<If> ::= if ( <Condition> ) <Statement> fi | if ( <Condition> ) <Statement> otherwise <Statement> fi")
                                     return True
                                 else:
                                     print("ERROR expected fi at end of if")
@@ -285,13 +298,14 @@ class SyntaxAnalyzer:
             return False
 
     def Return(self):
-        self.f.write("<Return> ::= return ; | return <Expression> ;\n")
-        self.productions.append("<Return> ::= return ; | return <Expression> ;")
+
         if self.lexeme == "return":
             self.lexer_next()
             self.Expression() #not an if statement because we dont *need* the expression to be a valid return
             if self.lexeme == ";":
                 self.lexer_next()
+                self.f.write("<Return> ::= return ; | return <Expression> ;\n")
+                self.productions.append("<Return> ::= return ; | return <Expression> ;")
                 return True
             else:
                 print("ERROR ; expected after return")
@@ -299,8 +313,7 @@ class SyntaxAnalyzer:
             return False
 
     def Print(self):
-        self.f.write("<Print> ::= put ( <Expression> ) ; \n")
-        self.productions.append("<Print> ::= put ( <Expression> ) ; ")
+
         if self.lexeme == "put":
             self.lexer_next()
             if self.lexeme == '(':
@@ -310,6 +323,8 @@ class SyntaxAnalyzer:
                     self.lexer_next()
                     if self.lexeme == ";":
                         self.lexer_next()
+                        self.f.write("<Print> ::= put ( <Expression> ) ; \n")
+                        self.productions.append("<Print> ::= put ( <Expression> ) ; ")
                         return True
                     else:
                         print("ERROR ; expected")
@@ -324,8 +339,7 @@ class SyntaxAnalyzer:
             return False
 
     def Scan(self):
-        self.f.write("<Scan> ::= get ( <IDs> ) ; \n")
-        self.productions.append("<Scan> ::= get ( <IDs> ) ; ")
+
         if self.lexeme == "get":
             self.lexer_next()
             if self.lexeme == "(":
@@ -335,6 +349,8 @@ class SyntaxAnalyzer:
                         self.lexer_next()
                         if self.lexeme == ';':
                             self.lexer_next()
+                            self.f.write("<Scan> ::= get ( <IDs> ) ; \n")
+                            self.productions.append("<Scan> ::= get ( <IDs> ) ; ")
                             return True
                         else:
                             print("ERROR expected ;")
@@ -352,8 +368,7 @@ class SyntaxAnalyzer:
             return False
 
     def While(self):
-        self.f.write("<While> ::= while ( <Condition> ) <Statement>\n")
-        self.productions.append("<While> ::= while ( <Condition> ) <Statement>")
+
         if self.lexeme == "while":
             self.lexer_next()
             if self.lexeme == "(":
@@ -362,6 +377,8 @@ class SyntaxAnalyzer:
                     if self.lexeme == ")":
                         self.lexer_next()
                         if self.Statement():
+                            self.f.write("<While> ::= while ( <Condition> ) <Statement>\n")
+                            self.productions.append("<While> ::= while ( <Condition> ) <Statement>")
                             return True
                         else:
                             print("ERROR expected statement")
@@ -379,11 +396,12 @@ class SyntaxAnalyzer:
             return False
 
     def Condition(self):
-        self.f.write("<Condition> ::= <Expression> <Relop> <Expression>\n")
-        self.productions.append("<Condition> ::= <Expression> <Relop> <Expression>")
+
         if self.Expression():
             if self.Relop():
                 if self.Expression():
+                    self.f.write("<Condition> ::= <Expression> <Relop> <Expression>\n")
+                    self.productions.append("<Condition> ::= <Expression> <Relop> <Expression>")
                     return True
                 else:
                     print("ERROR expected Expression")
@@ -395,30 +413,33 @@ class SyntaxAnalyzer:
             return False
 
     def Relop(self):
-        self.f.write("<Relop> ::= == | /= | > | < | => | <=\n")
-        self.productions.append("<Relop> ::= == | /= | > | < | => | <=")
+
         if self.lexeme in ['==','/=','>','<','=>','<=']:
             self.lexer_next()
+            self.f.write("<Relop> ::= == | /= | > | < | => | <=\n")
+            self.productions.append("<Relop> ::= == | /= | > | < | => | <=")
             return True
         else:
             return False
 
     def Expression(self):
-        self.f.write("<Expression> ::= <Term> <ExpressionPrime>\n")
-        self.productions.append("<Expression> ::= <Term> <ExpressionPrime>")
+
         if self.Term():
             self.ExpressionPrime()
+            self.f.write("<Expression> ::= <Term> <ExpressionPrime>\n")
+            self.productions.append("<Expression> ::= <Term> <ExpressionPrime>")
             return True
         else:
             print("ERROR expected term")
             return False
 
     def ExpressionPrime(self):
-        self.f.write("<ExpressionPrime> ::= + <Term> <ExpressionPrime> | - <Term> <ExpressionPrime> | <Empty>\n")
-        self.productions.append("<ExpressionPrime> ::= + <Term> <ExpressionPrime> | - <Term> <ExpressionPrime> | <Empty>")
+
         if self.lexeme in ['+','-']:
             self.lexer_next()
             if self.Term():
+                self.f.write("<ExpressionPrime> ::= + <Term> <ExpressionPrime> | - <Term> <ExpressionPrime> | <Empty>\n")
+                self.productions.append("<ExpressionPrime> ::= + <Term> <ExpressionPrime> | - <Term> <ExpressionPrime> | <Empty>")
                 self.ExpressionPrime()
             else:
                 print("ERROR expected term")
@@ -426,20 +447,22 @@ class SyntaxAnalyzer:
             self.Empty()
 
     def Term(self):
-        self.f.write("<Term> ::= <Factor> <TermPrime>\n")
-        self.productions.append("<Term> ::= <Factor> <TermPrime>")
+
         if self.Factor():
             self.TermPrime()
+            self.f.write("<Term> ::= <Factor> <TermPrime>\n")
+            self.productions.append("<Term> ::= <Factor> <TermPrime>")
             return True
         else:
             return False
 
     def TermPrime(self):
-        self.f.write("<TermPrime> ::= * <Factor> <TermPrime> | / <Factor> <TermPrime> | <Empty>\n")
-        self.productions.append("<TermPrime> ::= * <Factor> <TermPrime> | / <Factor> <TermPrime> | <Empty>")
+
         if self.lexeme in ['*','/']:
             self.lexer_next()
             if self.Factor():
+                self.f.write("<TermPrime> ::= * <Factor> <TermPrime> | / <Factor> <TermPrime> | <Empty>\n")
+                self.productions.append("<TermPrime> ::= * <Factor> <TermPrime> | / <Factor> <TermPrime> | <Empty>")
                 self.TermPrime()
             else:
                 print("ERROR expected Factor")
@@ -447,11 +470,12 @@ class SyntaxAnalyzer:
             self.Empty()
 
     def Factor(self):
-        self.f.write("<Factor> ::= - <Primary> | <Primary>\n")
-        self.productions.append("<Factor> ::= - <Primary> | <Primary>")
+
         if self.lexeme == "-":
             self.lexer_next()
         elif self.Primary():
+            self.f.write("<Factor> ::= - <Primary> | <Primary>\n")
+            self.productions.append("<Factor> ::= - <Primary> | <Primary>")
             return True
 
         print("ERROR expected primary")
@@ -529,6 +553,7 @@ if __name__ == '__main__':
             SA.corpus = lexer(s)
             #for elem in SA.corpus:
             #    SA.f.write("%s %s \n" % elem)
+    print(SA.corpus)
     SA.token, SA.lexeme = SA.corpus[0]
     SA.f.write("Token: %s \t Lexeme: %s \n" % (SA.token, SA.lexeme))
     SA.Rat19F()
