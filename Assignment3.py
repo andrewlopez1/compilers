@@ -14,14 +14,19 @@ class SemanticParser:
         self.jumpstack = []
 
     def parse(self):
-        while self.corpus_counter < len(self.corpus):
-            self.A()
-            self.while_statement()
-            self.I()
-            self.compound()
-            #self.SL()
-            self.scan()
-            self.p()
+        if self.lexeme == "%%":
+            self.lexer_next()
+            self.OptDeclarationList()
+            self.SL()
+        else:
+            print("ERROR: %%")
+        if self.lexeme == "%%":
+            self.lexer_next()
+        else:
+            print("ERROR: expected %%, got %s " % self.lexeme)
+        if self.token is not "EOF":
+            print("Expected EOF after %%")
+
         self.f.write("\n Final Instruction Table: \n")
         self.f.write(str(self.instr_table))
 
@@ -52,6 +57,36 @@ class SemanticParser:
             return
         self.token, self.lexeme = self.corpus[self.corpus_counter]
         self.f.write("Token: %s \t Lexeme: %s \n" % (self.token, self.lexeme))
+
+    def OptDeclarationList(self):
+        self.DeclarationList()
+
+    def DeclarationList(self):
+        if self.Declaration():
+            if self.lexeme == ';':
+                self.lexer_next()
+                if not self.DeclarationList():
+                    return True
+                else:
+                    return True
+            else:
+                print("ERROR ';' expected")
+                return False
+        else:
+            return False
+
+    def Declaration(self):
+        if self.Qualifier():
+            if self.IDs():
+                return True
+        return False
+
+    def Qualifier(self):
+        if self.lexeme in ('int', 'boolean'):
+            self.lexer_next()
+            return True
+        else:
+            return False
 
     def A(self):
         if self.token == 'Identifier':
@@ -103,8 +138,6 @@ class SemanticParser:
         elif self.token == 'Digit':
             self.gen_instr('PUSHM', str(self.lexeme))
             self.lexer_next()
-        else:
-            print('ERROR: Identifier expected')
 
     def while_statement(self):
         if self.lexeme == 'while':
@@ -124,8 +157,7 @@ class SemanticParser:
                     print('ERROR: ) expected.')
             else:
                 print("ERROR: ( expected.")
-        else:
-            print("ERROR: while Expected.")
+
 
     def C(self):
         self.E()
@@ -183,39 +215,66 @@ class SemanticParser:
                     print("ERROR: ) expected.")
             else:
                 print("ERROR: ( expected.")
-        else:
-            print("ERROR: if expected.")
+
 
 #compound = {statementList}
     def compound(self):
         if self.lexeme == "{":
-            addr = str(self.instr_address)
-            self.gen_instr('LABEL', 'nil')
             self.lexer_next()
             self.SL()
             if self.lemxeme == "}":
-                self.gen_instr('JUMP', addr)
-                back_patch(self.instr_address)
                 self.lexer_next()
-            else:
-                print('ERROR: } expected')
-        else: print('ERROR: { expected')
+        #    else:
+                #print('ERROR: } expected')
+    #    else:
+             #print('ERROR: { expected')
 
-#statementList = s | s * SL
+#statementList = s | sSL
     def SL(self):
-        self.s()
 
-#scan = get (ID) | ; **DO WE NEED SEMICOLON?????* HOW DO WE DO OR :(
+        if self.S():
+            if not self.SL():
+                return True
+            else:
+                return True
+        else:
+            return False
+
+    def S(self):
+        if self.compound() or self.A() or self.I() or self.r() or self.p() or self.scan() or self.while_statement():
+            return True
+        else:
+            return False
+
+    def r(self):
+        if self.lexeme == "return":
+            self.lexer_next()
+            self.E()
+            if self.lexeme == ";":
+                self.lexer_next()
+                return True
+            else:
+                print("ERROR ; expected after return")
+            self.gen_instr('JUMPZ', 'nil')
+        else:
+            return False
+
     def scan(self):
         if self.lexeme == 'get':
             addr = str(self.instr_address)
-            self.gen_instr('LABEL', 'nil')
             self.lexer_next()
             if self.lexeme == '(':
                 self.lexer_next()
+                save = self.lexeme
                 self.id()
+                self.gen_instr('STDIN', str(self.symbol_table[save][0]))
                 if self.lexeme == ')':
                     self.lexer_next()
+                    if self.lexeme == ';':
+                        self.lexer_next()
+                        return True
+                    else:
+                        print('ERROR: ; expected')
                 else:
                     print('ERROR: ) expected')
             else:
@@ -227,23 +286,35 @@ class SemanticParser:
             self.symbol_table.append(save)
             self.lexer_next()
             if self.lexeme == ',':
-                #do something
+                self.lexer_next()
                 self.id()
-                self.lexer_next() #uhm how do we stop this lol
-            else:
-                print('ERROR: , expected')
         else:
             print('ERROR: identifier expected')
+
+    def IDs(self):
+
+        if self.token == "Identifier":
+            self.lexer_next()
+            if self.lexeme == ',':
+                self.lexer_next()
+                if not self.IDs():
+                    print("ERROR expected Identifier")
+                    return False
+                else:
+                    return True
+            else:
+                return True
+        else:
+            return False
 
 #print = put (expression);
     def p(self):
         if self.lexeme == 'put':
-            addr = str(self.instr_address)
-            self.gen_instr('LABEL', 'nil')
             self.lexer_next()
             if self.lexeme == '(':
                 self.lexer_next()
                 self.E()
+                self.gen_instr('STDOUT', str(self.symbol_table[self.lexeme][0]))
                 if self.lexeme == ')':
                     self.lexer_next()
                 else:
