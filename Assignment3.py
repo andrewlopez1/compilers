@@ -3,7 +3,7 @@
 
 class SemanticParser:
     def __init__(self):
-        self.instr_address = 0
+        self.instr_address = 5000
         self.token, self.lexeme = None, None
         self.corpus = None
         self.corpus_counter = 0
@@ -48,7 +48,7 @@ class SemanticParser:
         self.Eprime()
 
     def Eprime():
-        if self.lexeme = '+':
+        if self.lexeme == '+':
             self.lexer_next()
             self.T()
             self.gen_instr('ADD', 'nil')
@@ -151,3 +151,68 @@ class SemanticParser:
                 print("ERROR: ( expected.")
         else:
             print("ERROR: if expected.")
+
+#compound = {statementList}
+    def compound():
+        if self.lexeme == "{"
+            addr = str(self.instr_address)
+            self.gen_instr('LABEL', 'nil')
+            self.lexer_next()
+            self.SL()
+            if self.lemxeme == "}"
+                self.gen_instr('JUMP', addr)
+                back_patch(self.instr_address)
+                self.lexer_next()
+            else:
+                print('ERROR: } expected')
+        else: print('ERROR: { expected')
+
+#statementList = s | s * SL
+    def SL():
+        self.s()
+
+#scan = get (ID) | ; **DO WE NEED SEMICOLAN?????* HOW DO WE DO OR :(
+    def scan():
+        if self.lexeme == 'get'
+            addr = str(self.instr_address)
+            self.gen_instr('LABEL', 'nil')
+            self.lexer_next()
+            if self.lexeme == '(':
+                self.lexer_next()
+                self.id()
+                if self.lexeme == ')':
+                    self.lexer_next()
+                else:
+                    print('ERROR: ) expected')
+            else:
+                print('ERROR: ( expected')
+
+    def id():
+        if self.token == 'Identifier':
+            save = self.lexeme
+            self.symbol_table.append(save)
+            self.lexer_next()
+            if self.lexeme == ',':
+                #do something
+                self.id()
+                self.lexer_next() #uhm how do we stop this lol
+            else:
+                print('ERROR: , expected')
+        else:
+            print('ERROR: identifier expected')
+
+#print = put (expression);
+    def p():
+        if self.lexeme == 'put'
+            addr = str(self.instr_address)
+            self.gen_instr('LABEL', 'nil')
+            self.lexer_next()
+            if self.lexeme == '(':
+                self.lexer_next()
+                self.E()
+                if self.lexeme == ')':
+                    self.lexer_next()
+                else:
+                    print('ERROR: ) expected')
+            else:
+                print('ERROR: ( expected')
