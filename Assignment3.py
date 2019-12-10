@@ -1,9 +1,9 @@
-
-
+import argparse
+from Assignment1 import lexer
 
 class SemanticParser:
     def __init__(self):
-        self.instr_address = 5000
+        self.instr_address = 0
         self.token, self.lexeme = None, None
         self.corpus = None
         self.corpus_counter = 0
@@ -12,11 +12,16 @@ class SemanticParser:
         self.symbol_table = []
         self.jumpstack = []
 
-    def gen_instr(op, oprnd):
-        self.instr_table.append((0,0,0))
-        self.instr_table[instr_address][0] = instr_address
-        self.instr_table[instr_address][1] = op
-        self.instr_table[instr_address][2] = oprnd
+    def parse(self):
+        while self.corpus_counter < len(self.corpus):
+            self.A()
+
+    def gen_instr(self, op, oprnd):
+        self.instr_table.append([0,0,0])
+        self.instr_table[self.instr_address][0] = self.instr_address
+        self.instr_table[self.instr_address][1] = op
+        self.instr_table[self.instr_address][2] = oprnd
+        self.f.write(str(self.instr_table[self.instr_address]))
         self.instr_address += 1
 
     def lexer_next(self):
@@ -29,7 +34,7 @@ class SemanticParser:
         self.token, self.lexeme = self.corpus[self.corpus_counter]
         self.f.write("Token: %s \t Lexeme: %s \n" % (self.token, self.lexeme))
 
-    def A():
+    def A(self):
         if self.token == 'Identifier':
             save = self.lexeme
             self.symbol_table.append(save)
@@ -41,38 +46,41 @@ class SemanticParser:
             else:
                 print("ERROR: = expected")
         else:
-            print("ERROR: identifier expected")
+            print("ERROR: identifier expected, got %s" % self.lexeme)
 
-    def E():
+    def E(self):
         self.T()
         self.Eprime()
 
-    def Eprime():
+    def Eprime(self):
         if self.lexeme == '+':
             self.lexer_next()
             self.T()
             self.gen_instr('ADD', 'nil')
             self.Eprime()
 
-    def T():
+    def T(self):
         self.F()
         self.Tprime()
 
-    def Tprime():
+    def Tprime(self):
         if self.lexeme == '*':
             self.lexer_next()
             self.F()
             self.gen_instr('MUL', 'nil')
             self.Tprime()
 
-    def F():
+    def F(self):
         if self.token == 'Identifier':
             self.gen_instr('PUSHM', str(self.symbol_table.index(self.lexeme)))
+            self.lexer_next()
+        elif self.token == 'Digit':
+            self.gen_instr('PUSHM', str(self.lexeme))
             self.lexer_next()
         else:
             print('ERROR: Identifier expected')
 
-    def while_statement():
+    def while_statement(self):
         if self.lexeme == 'while':
             addr = str(self.instr_address)
             self.gen_instr('LABEL', 'nil')
@@ -93,7 +101,7 @@ class SemanticParser:
         else:
             print("ERROR: while Expected.")
 
-    def C():
+    def C(self):
         self.E()
         if self.lexeme in ['==','/=','>','<','=>','<=']:
             op = self.lexeme
@@ -126,11 +134,11 @@ class SemanticParser:
         else:
             print("ERROR: R Token Expected.")
 
-    def back_patch(jump_addr):
+    def back_patch(self, jump_addr):
         addr = self.jumpstack.pop()
         instr_table[addr][3] = str(jump_addr)
 
-    def I():
+    def I(self):
         if self.lexeme == 'if':
             addr = self.instr_address
             self.lexer_next()
@@ -153,13 +161,13 @@ class SemanticParser:
             print("ERROR: if expected.")
 
 #compound = {statementList}
-    def compound():
-        if self.lexeme == "{"
+    def compound(self):
+        if self.lexeme == "{":
             addr = str(self.instr_address)
             self.gen_instr('LABEL', 'nil')
             self.lexer_next()
             self.SL()
-            if self.lemxeme == "}"
+            if self.lemxeme == "}":
                 self.gen_instr('JUMP', addr)
                 back_patch(self.instr_address)
                 self.lexer_next()
@@ -168,12 +176,12 @@ class SemanticParser:
         else: print('ERROR: { expected')
 
 #statementList = s | s * SL
-    def SL():
+    def SL(self):
         self.s()
 
-#scan = get (ID) | ; **DO WE NEED SEMICOLAN?????* HOW DO WE DO OR :(
-    def scan():
-        if self.lexeme == 'get'
+#scan = get (ID) | ; **DO WE NEED SEMICOLON?????* HOW DO WE DO OR :(
+    def scan(self):
+        if self.lexeme == 'get':
             addr = str(self.instr_address)
             self.gen_instr('LABEL', 'nil')
             self.lexer_next()
@@ -187,7 +195,7 @@ class SemanticParser:
             else:
                 print('ERROR: ( expected')
 
-    def id():
+    def id(self):
         if self.token == 'Identifier':
             save = self.lexeme
             self.symbol_table.append(save)
@@ -202,8 +210,8 @@ class SemanticParser:
             print('ERROR: identifier expected')
 
 #print = put (expression);
-    def p():
-        if self.lexeme == 'put'
+    def p(self):
+        if self.lexeme == 'put':
             addr = str(self.instr_address)
             self.gen_instr('LABEL', 'nil')
             self.lexer_next()
@@ -216,3 +224,24 @@ class SemanticParser:
                     print('ERROR: ) expected')
             else:
                 print('ERROR: ( expected')
+
+if __name__ == '__main__':
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("path")
+    args = argparser.parse_args()
+    SP = SemanticParser()
+    s = ""
+    SP.f = open("output.txt", "w+")
+    path = args.path
+    if path.endswith(".txt") and path != "output.txt":
+        print("parsing %s" % path)
+        SP.f.write("\n OUTPUT FOR %s\n" % path)
+        with open(path, 'r') as file:
+            s = file.read().replace('\n', ' ').replace('\t', ' ')
+            SP.corpus = lexer(s)
+            #for elem in SA.corpus:
+            #    SA.f.write("%s %s \n" % elem)
+    print(SP.corpus)
+    SP.token, SP.lexeme = SP.corpus[0]
+    SP.f.write("Token: %s \t Lexeme: %s \n" % (SP.token, SP.lexeme))
+    SP.parse()
