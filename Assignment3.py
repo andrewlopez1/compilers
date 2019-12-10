@@ -15,13 +15,21 @@ class SemanticParser:
     def parse(self):
         while self.corpus_counter < len(self.corpus):
             self.A()
+            self.while_statement()
+            self.I()
+            self.compound()
+            #self.SL()
+            self.scan()
+            self.p()
+        self.f.write("\n Final Instruction Table: \n")
+        self.f.write(str(self.instr_table))
 
     def gen_instr(self, op, oprnd):
         self.instr_table.append([0,0,0])
         self.instr_table[self.instr_address][0] = self.instr_address
         self.instr_table[self.instr_address][1] = op
         self.instr_table[self.instr_address][2] = oprnd
-        self.f.write(str(self.instr_table[self.instr_address]))
+        self.f.write(str(self.instr_table[self.instr_address]) + '\n')
         self.instr_address += 1
 
     def lexer_next(self):
