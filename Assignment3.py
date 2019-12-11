@@ -336,15 +336,21 @@ class SemanticParser:
 
 #compound = {statementList}
     def compound(self):
-        if self.lexeme == "{":
+
+        if self.lexeme == '{':
             self.lexer_next()
-            self.SL()
-            if self.lexeme == "}":
-                self.lexer_next()
-        #    else:
-                #print('ERROR: } expected')
-    #    else:
-             #print('ERROR: { expected')
+            if self.SL():
+                if self.lexeme == '}':
+                    self.lexer_next()
+                    return True
+                else:
+                    print("ERROR '}' expected")
+                    return False
+            else:
+                print("ERROR Statement List expected")
+                return False
+        else:
+            return False
 
 #statementList = s | sSL
     def SL(self):
@@ -361,7 +367,7 @@ class SemanticParser:
             return False
 
     def S(self):
-        if self.A() or self.scan() or self.while_statement() or self.I():
+        if self.A() or self.scan() or self.while_statement() or self.I() or self.compound() or self.p():
             return True
         else:
             return False
@@ -409,21 +415,22 @@ class SemanticParser:
         else:
             return False
 
-    def id(self):
-        if self.token == 'Identifier':
-            save = self.lexeme
-            self.symbol_table[save] = [self.memory_addr]
-            self.lexer_next()
-            if self.lexeme == ',':
-                self.lexer_next()
-                self.id()
-        else:
-            print('ERROR: identifier expected')
+    # def id(self):
+    #     if self.token == 'Identifier':
+    #         save = self.lexeme
+    #         self.symbol_table[save] = [self.memory_addr]
+    #         self.lexer_next()
+    #         if self.lexeme == ',':
+    #             self.lexer_next()
+    #             self.id()
+    #     else:
+    #         print('ERROR: identifier expected')
 
     def IDs(self):
         if self.token == "Identifier":
-            self.symbol_table[self.lexeme] = [self.memory_addr, self.token]
-            self.memory_addr += 1
+            if self.lexeme not in self.symbol_table:
+                self.symbol_table[self.lexeme] = [self.memory_addr, self.token]
+                self.memory_addr += 1
             self.lexer_next()
             if self.lexeme == ',':
                 self.lexer_next()
@@ -440,18 +447,28 @@ class SemanticParser:
 
 #print = put (expression);
     def p(self):
-        if self.lexeme == 'put':
+        if self.lexeme == "put":
             self.lexer_next()
             if self.lexeme == '(':
                 self.lexer_next()
                 self.E()
-                self.gen_instr('STDOUT', str(self.symbol_table[self.lexeme][0]))
-                if self.lexeme == ')':
+                self.gen_instr('STDOUT', 'nil')
+                if self.lexeme == ")":
                     self.lexer_next()
+                    if self.lexeme == ";":
+                        self.lexer_next()
+                        return True
+                    else:
+                        print("ERROR ; expected")
+                        return False
                 else:
-                    print('ERROR: ) expected')
+                    print("ERROR expected )")
+                    return False
             else:
-                print('ERROR: ( expected')
+                print("ERROR expected (")
+                return False
+        else:
+            return False
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
