@@ -59,13 +59,17 @@ class SemanticParser:
         self.f.write("Token: %s \t Lexeme: %s \n" % (self.token, self.lexeme))
 
     def OptDeclarationList(self):
-        self.DeclarationList()
+        if self.DeclarationList():
+            return
+        else:
+            self.Empty()
 
     def DeclarationList(self):
         if self.Declaration():
             if self.lexeme == ';':
                 self.lexer_next()
                 if not self.DeclarationList():
+                    self.Empty()
                     return True
                 else:
                     return True
@@ -93,51 +97,126 @@ class SemanticParser:
             save = self.lexeme
             if self.check_sym(save):
                 print("ERROR: %s already declared." % save)
-                return
-            self.symbol_table[self.lexeme] = [self.memory_addr, self.token]
-            self.memory_addr += 1
+                #return
             self.lexer_next()
             if self.lexeme == '=':
                 self.lexer_next()
                 if self.check_sym(self.token) and self.token != self.symbol_table[save][1]:
                     print("ERROR: Type mismatch %s -> %s" % (self.token, self.symbol_table[save][1]))
-                    return
-                self.E()
-                self.gen_instr('POPM', str(self.symbol_table[save][0]))
+                    #return
+                if self.E():
+                    self.gen_instr('POPM', str(self.symbol_table[save][0]))
+                    if self.lexeme == ';':
+                        self.lexer_next()
+                        return True
+                    else:
+                        print("ERROR ; expected")
+                        return False
+                else:
+                    print("ERROR: expected expression")
+                    return False
             else:
                 print("ERROR: = expected")
+                return False
         else:
-            print("ERROR: identifier expected, got %s" % self.lexeme)
+            return False
 
     def E(self):
-        self.T()
-        self.Eprime()
+        if self.T():
+            self.Eprime()
+            return True
+        else:
+            return False
 
     def Eprime(self):
         if self.lexeme == '+':
             self.lexer_next()
-            self.T()
-            self.gen_instr('ADD', 'nil')
-            self.Eprime()
+            if self.T():
+                self.gen_instr('ADD', 'nil')
+                self.Eprime()
+            else:
+                print("ERROR expected term")
+        else:
+            self.Empty()
 
     def T(self):
-        self.F()
-        self.Tprime()
+        if self.F():
+            self.Tprime()
+            return True
+        else:
+            return False
 
     def Tprime(self):
         if self.lexeme == '*':
             self.lexer_next()
-            self.F()
-            self.gen_instr('MUL', 'nil')
-            self.Tprime()
+            if self.F():
+                self.gen_instr('MUL', 'nil')
+                self.Tprime()
+            else:
+                print("ERROR expected Factor")
+        else:
+            self.Empty()
+
+    # def F(self):
+    #     if self.token == 'Identifier':
+    #         print('reached factor')
+    #         self.gen_instr('PUSHM', str(self.symbol_table[self.lexeme][0]))
+    #         self.lexer_next()
+    #     elif self.token == 'Digit':
+    #         self.gen_instr('PUSHM', str(self.lexeme))
+    #         self.lexer_next()
+    #     #self.lexer_next()
 
     def F(self):
-        if self.token == 'Identifier':
-            self.gen_instr('PUSHM', str(self.symbol_table[self.lexeme][0]))
+        if self.lexeme == "-":
             self.lexer_next()
-        elif self.token == 'Digit':
+        elif self.Primary():
+            return True
+        print("ERROR expected primary")
+        return False
+
+    def Primary(self):
+        if self.token in ["Integer", "Real", "Digit"]:
             self.gen_instr('PUSHM', str(self.lexeme))
             self.lexer_next()
+            return True
+        elif self.lexeme in ['true','false']:
+            self.lexer_next()
+            return True
+        elif self.token == "Identifier":
+            self.gen_instr('PUSHM', str(self.symbol_table[self.lexeme][0]))
+            self.lexer_next()
+            if self.lexeme == "(":
+                self.lexer_next()
+                if self.IDs():
+                    if self.lexeme == ')':
+                        self.lexer_next()
+                        return True
+                    else:
+                        print("ERROR expected )")
+                        return False
+                else:
+                    print("ERROR expected ID")
+                    return False
+            else:
+                return True
+        elif self.lexeme == "(":
+            self.lexer_next()
+            if self.E():
+                if self.lexeme == ")":
+                    self.lexer_next()
+                    return True
+                else:
+                    print("ERROR expected )")
+                    return False
+            else:
+                print("ERROR expected expression")
+                return False
+        else:
+            return False
+
+    def Empty(self):
+        return
 
     def while_statement(self):
         if self.lexeme == 'while':
@@ -222,7 +301,7 @@ class SemanticParser:
         if self.lexeme == "{":
             self.lexer_next()
             self.SL()
-            if self.lemxeme == "}":
+            if self.lexeme == "}":
                 self.lexer_next()
         #    else:
                 #print('ERROR: } expected')
@@ -234,14 +313,17 @@ class SemanticParser:
 
         if self.S():
             if not self.SL():
+                #self.lexer_next()
+                self.Empty()
                 return True
             else:
+                #self.lexer_next()
                 return True
         else:
             return False
 
     def S(self):
-        if self.compound() or self.A() or self.I() or self.r() or self.p() or self.scan() or self.while_statement():
+        if self.A() or self.scan():
             return True
         else:
             return False
@@ -266,24 +348,33 @@ class SemanticParser:
             if self.lexeme == '(':
                 self.lexer_next()
                 save = self.lexeme
-                self.id()
-                self.gen_instr('STDIN', str(self.symbol_table[save][0]))
-                if self.lexeme == ')':
-                    self.lexer_next()
-                    if self.lexeme == ';':
+                if self.IDs():
+                    print(self.symbol_table)
+                    self.gen_instr('STDIN', str(self.symbol_table[save][0]))
+                    if self.lexeme == ')':
                         self.lexer_next()
-                        return True
+                        if self.lexeme == ';':
+                            self.lexer_next()
+                            return True
+                        else:
+                            print('ERROR: ; expected')
+                            return False
                     else:
-                        print('ERROR: ; expected')
+                        print('ERROR: ) expected')
+                        return False
                 else:
-                    print('ERROR: ) expected')
+                    print('ERROR: expected identifier')
+                    return False
             else:
                 print('ERROR: ( expected')
+                return False
+        else:
+            return False
 
     def id(self):
         if self.token == 'Identifier':
             save = self.lexeme
-            self.symbol_table.append(save)
+            self.symbol_table[save] = [self.memory_addr]
             self.lexer_next()
             if self.lexeme == ',':
                 self.lexer_next()
@@ -292,8 +383,9 @@ class SemanticParser:
             print('ERROR: identifier expected')
 
     def IDs(self):
-
         if self.token == "Identifier":
+            self.symbol_table[self.lexeme] = [self.memory_addr, self.token]
+            self.memory_addr += 1
             self.lexer_next()
             if self.lexeme == ',':
                 self.lexer_next()
@@ -303,6 +395,7 @@ class SemanticParser:
                 else:
                     return True
             else:
+                self.Empty()
                 return True
         else:
             return False
