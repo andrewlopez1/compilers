@@ -1,8 +1,17 @@
 %%
-int i , max , sum;
+int i , max , sum, a, b, c;
 
 sum = 0;
 i = 1;
 get(max);
 i = i + max;
+while ( i < max){
+ i  = i  + 1;
+}
+if (a < b){
+a =  c;
+}
+fi
+put (a + b);
+
 %%
