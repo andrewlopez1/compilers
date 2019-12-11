@@ -225,55 +225,68 @@ class SemanticParser:
             self.lexer_next()
             if self.lexeme == '(':
                 self.lexer_next()
-                self.C()
-                if self.lexeme == ')':
-                    self.lexer_next()
-                    self.S()
-                    self.gen_instr('JUMP', addr)
-                    back_patch(self.instr_address)
-                    self.lexer_next()
+                if self.C():
+                    if self.lexeme == ')':
+                        self.lexer_next()
+                        if self.S():
+                            self.gen_instr('JUMP', addr)
+                            self.back_patch(self.instr_address)
+                            return True;
+                            #self.lexer_next()
+                        else:
+                            return False;
+                    else:
+                        print('ERROR: ) expected.')
+                        return False;
                 else:
-                    print('ERROR: ) expected.')
+                    return False;
             else:
                 print("ERROR: ( expected.")
+                return False;
+        else:
+            return False;
 
 
     def C(self):
-        self.E()
-        if self.lexeme in ['==','/=','>','<','=>','<=']:
-            op = self.lexeme
-            self.lexer_next()
-            self.E()
-            if op == '<':
-                self.gen_instr('LES', 'nil')
-                self.jumpstack.append(self.instr_address)
-                self.gen_instr('JUMPZ', 'nil')
-            elif op == '>':
-                self.gen_instr('GRT', 'nil')
-                self.jumpstack.append(self.instr_address)
-                self.gen_instr('JUMPZ', 'nil')
-            elif op == '==':
-                self.gen_instr('EQU', 'nil')
-                self.jumpstack.append(self.instr_address)
-                self.gen_instr('JUMPZ', 'nil')
-            elif op == '/=':
-                self.gen_instr('NEQ', 'nil')
-                self.jumpstack.append(self.instr_address)
-                self.gen_instr('JUMPZ', 'nil')
-            elif op == '=>':
-                self.gen_instr('GEQ', 'nil')
-                self.jumpstack.append(self.instr_address)
-                self.gen_instr('JUMPZ', 'nil')
-            elif op == '<=':
-                self.gen_instr('LEQ', 'nil')
-                self.jumpstack.append(self.instr_address)
-                self.gen_instr('JUMPZ', 'nil')
+        if self.E():
+            if self.lexeme in ['==','/=','>','<','=>','<=']:
+                op = self.lexeme
+                self.lexer_next()
+                if self.E():
+                    if op == '<':
+                        self.gen_instr('LES', 'nil')
+                        self.jumpstack.append(self.instr_address)
+                        self.gen_instr('JUMPZ', 'nil')
+                    elif op == '>':
+                        self.gen_instr('GRT', 'nil')
+                        self.jumpstack.append(self.instr_address)
+                        self.gen_instr('JUMPZ', 'nil')
+                    elif op == '==':
+                        self.gen_instr('EQU', 'nil')
+                        self.jumpstack.append(self.instr_address)
+                        self.gen_instr('JUMPZ', 'nil')
+                    elif op == '/=':
+                        self.gen_instr('NEQ', 'nil')
+                        self.jumpstack.append(self.instr_address)
+                        self.gen_instr('JUMPZ', 'nil')
+                    elif op == '=>':
+                        self.gen_instr('GEQ', 'nil')
+                        self.jumpstack.append(self.instr_address)
+                        self.gen_instr('JUMPZ', 'nil')
+                    elif op == '<=':
+                        self.gen_instr('LEQ', 'nil')
+                        self.jumpstack.append(self.instr_address)
+                        self.gen_instr('JUMPZ', 'nil')
+                    return True
+            else:
+                print("ERROR: R Token Expected.")
+                return False
         else:
-            print("ERROR: R Token Expected.")
+            return False
 
     def back_patch(self, jump_addr):
         addr = self.jumpstack.pop()
-        instr_table[addr][3] = str(jump_addr)
+        self.instr_table[addr][2] = str(jump_addr)
 
     def I(self):
         if self.lexeme == 'if':
@@ -323,7 +336,7 @@ class SemanticParser:
             return False
 
     def S(self):
-        if self.A() or self.scan():
+        if self.A() or self.scan() or self.while_statement():
             return True
         else:
             return False
