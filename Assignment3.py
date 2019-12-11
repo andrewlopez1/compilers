@@ -289,24 +289,49 @@ class SemanticParser:
         self.instr_table[addr][2] = str(jump_addr)
 
     def I(self):
-        if self.lexeme == 'if':
+
+        if self.lexeme == "if":
             addr = self.instr_address
             self.lexer_next()
-            if self.lexeme == '(':
+            if self.lexeme == "(":
                 self.lexer_next()
-                self.C()
-                if self.lexeme == ')':
-                    self.lexer_next()
-                    self.S()
-                    self.back_patch(self.instr_address)
-                    if self.lexeme == 'fi':
+                if self.C():
+                    if self.lexeme == ")":
                         self.lexer_next()
+                        if self.S():
+                            self.back_patch(self.instr_address)
+                            if self.lexeme == "otherwise":
+                                self.lexer_next()
+                                if self.S():
+                                    if self.lexeme == "fi":
+                                        self.lexer_next()
+                                        return True
+                                    else:
+                                        print("ERROR expected fi at end of if")
+                                        return False
+                                else:
+                                    print("ERROR expected statement")
+                                    return False
+                            else:
+                                if self.lexeme == "fi":
+                                    self.lexer_next()
+                                else:
+                                    print("ERROR expected fi at end of if")
+                                    return False
+                        else:
+                            print("ERROR expected statement")
+                            return False
                     else:
-                        print("ERROR: fi expected.")
+                        print('ERROR ) expected')
+                        return False
                 else:
-                    print("ERROR: ) expected.")
+                    print("ERROR expected condition")
+                    return False
             else:
-                print("ERROR: ( expected.")
+                print("ERROR Expected ) after if")
+                return False
+        else:
+            return False
 
 
 #compound = {statementList}
@@ -336,7 +361,7 @@ class SemanticParser:
             return False
 
     def S(self):
-        if self.A() or self.scan() or self.while_statement():
+        if self.A() or self.scan() or self.while_statement() or self.I():
             return True
         else:
             return False
