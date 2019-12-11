@@ -1,4 +1,8 @@
-a = 5001
-b = 5002
-c = 5003
-x = a + b * c
+%%
+int i , max , sum;
+
+sum = 0;
+i = 1;
+get(max);
+i = i + max;
+%%
